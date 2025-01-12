@@ -1,0 +1,43 @@
+name: Sync Upstream Changes
+
+on:
+  schedule:
+    # Ejecutar todos los días a las 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Permitir ejecución manual desde la pestaña Actions
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Configurar el repositorio
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Configurar el remoto 'upstream'
+      - name: Set Upstream Repository
+        run: git remote add upstream https://github.com/andrechristikan/ack-nestjs-boilerplate.git
+
+      # 3. Configurar nombre y correo del usuario de Git
+      - name: Configure Git User
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+      # 4. Obtener cambios del repositorio original
+      - name: Fetch Upstream Changes
+        run: git fetch upstream
+
+      # 5. Rebase los cambios de 'upstream/main' a 'main'
+      - name: Rebase Upstream Changes
+        run: |
+          git checkout main
+          git rebase upstream/main
+
+      # 6. Subir los cambios a tu repositorio (si hubo cambios)
+      - name: Push Changes
+        run: |
+          git push origin main --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
